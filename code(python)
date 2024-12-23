@@ -1,0 +1,548 @@
+import time
+import random
+
+class Object:
+    def __init__(self, name, hp, physic_pow):
+        self.name = name
+        self.hp = hp
+        self.physic_pow = physic_pow
+    
+    def attack(self, target):
+        print(f'{self.name}가 {target.name}을 {self.physic_pow}의 물리 공격력으로 공격했습니다.')
+        target.hp -= self.physic_pow
+        target.hp = max(0, target.hp)  # 체력이 0 이하로 내려가지 않게
+        return target.hp 
+
+    def status(self):
+        if self.hp > 0:
+            print(f'[{self.name}] 체력: {self.hp}')
+        else:
+            print(f'[{self.name}] 사망 상태')
+
+
+class Player(Object):
+    def __init__(self, name, hp, physic_pow):
+        super().__init__(name, hp, physic_pow)
+        self.level = 1
+        self.exp = 0
+        self.exp_to_next_level = 50
+        self.skills = []  # 플레이어가 보유한 스킬 리스트
+        self.mp = 30  # 플레이어 초기 마나
+        self.max_mp = 30
+        self.restored_mp = 5
+
+    def gain_exp(self, amount):
+        self.exp += amount
+        print(f'[{self.name}] 경험치 {amount} 획득! (현재 경험치: {self.exp}/{self.exp_to_next_level})')
+        if self.exp >= self.exp_to_next_level:
+            self.level_up()
+
+    def level_up(self):
+        self.level += 1
+        self.exp -= self.exp_to_next_level
+        self.exp_to_next_level += 50
+        self.hp += 20  # 레벨 업 시 체력 증가
+        self.physic_pow += 5  # 레벨 업 시 공격력 증가
+        self.max_mp += 10  # 레벨 업 시 마나 증가
+        self.restored_mp += 5
+        self.mp = self.max_mp
+        print(f'\n축하합니다! {self.name} 레벨 업!')
+        print(f'현재 레벨: {self.level}, 체력: {self.hp}, 공격력: {self.physic_pow}, 마나: {self.mp}/{self.max_mp}')
+        self.choose_skill()
+
+    def restore_mp(self, amount):
+        self.mp = min(self.max_mp, self.mp + amount)
+        print(f'{self.name}의 마나가 {amount} 회복되었습니다. (현재 마나: {self.mp}/{self.max_mp})')
+
+    def choose_skill(self):
+        print("\n[스킬 선택] 새 스킬을 배울 수 있습니다!")
+        available_skills = ["강타", "방어 자세", "속공"]
+        for idx, skill in enumerate(available_skills, start=1):
+            print(f"{idx}. {skill}")
+        choice = int(input("배우고 싶은 스킬 번호를 입력하세요: ")) - 1
+        if 0 <= choice < len(available_skills):
+            new_skill = available_skills[choice]
+            self.skills.append(new_skill)
+            print(f"[{self.name}] 새로운 스킬 획득: {new_skill}")
+        else:
+            print("잘못된 선택입니다. 다시 시도해주세요.")
+            self.choose_skill()
+
+    def use_skill(self, skill_name, target):
+        skill_cost = {"강타": 10 * self.level, "방어 자세": 5 * self.level, "속공": 15 * self.level}
+        if skill_name in self.skills:
+            if self.mp >= skill_cost[skill_name]:
+                self.mp -= skill_cost[skill_name]
+                print(f'{self.name}가 {skill_name} 스킬을 사용합니다! (마나: {self.mp}/{self.max_mp})')
+                if skill_name == "강타":
+                    damage = self.physic_pow * 2
+                    target.hp -= damage
+                    print(f"[{target.name}] {damage}의 피해를 입었습니다!")
+                elif skill_name == "방어 자세":
+                    self.hp += 10
+                    print(f"[{self.name}] 방어 자세로 체력을 10 회복. 현재 체력: {self.hp}")
+                elif skill_name == "속공":
+                    damage = self.physic_pow
+                    target.hp -= damage
+                    print(f"[{target.name}] {damage}의 피해! 추가 행동 가능!")
+            else:
+                print(f"마나 부족! {skill_name} 스킬 사용 실패. (필요 마나: {skill_cost[skill_name]})")
+        else:
+            print(f"[{self.name}] 배우지 않은 스킬입니다: {skill_name}")
+
+    def evade(self):
+        success = rd.random() < 0.5  # 50% 확률로 회피 성공
+        if success:
+            print(f"[{self.name}] 회피 성공! 이번 턴에 피해를 받지 않습니다.")
+        else:
+            print(f"[{self.name}] 회피 실패! 다음 턴에 대비하세요.")
+        return success
+
+    def status(self):
+        print(f"\n[플레이어 상태]")
+        print(f"이름: {self.name}")
+        print(f"레벨: {self.level}")
+        print(f"체력: {self.hp}")
+        print(f"마나: {self.mp}/{self.max_mp}")
+        print(f"경험치: {self.exp}/{self.exp_to_next_level}")
+        print(f"공격력: {self.physic_pow}")
+        print(f"스킬: {', '.join(self.skills) if self.skills else '없음'}")
+        print(f"====================")
+
+class Player2(Object):
+    def __init__(self, name, hp, physic_pow):
+        super().__init__(name, hp, physic_pow)
+        self.level = 1
+        self.exp = 0
+        self.exp_to_next_level = 50
+        self.magic_pow = 12
+        self.skills = []  # 플레이어가 보유한 스킬 리스트
+        self.mp = 40  # 플레이어 초기 마나
+        self.max_mp = 40
+        self.restored_mp = 7
+
+    def gain_exp(self, amount):
+        self.exp += amount
+        print(f'[{self.name}] 경험치 {amount} 획득! (현재 경험치: {self.exp}/{self.exp_to_next_level})')
+        if self.exp >= self.exp_to_next_level:
+            self.level_up()
+
+    def level_up(self):
+        self.level += 1
+        self.exp -= self.exp_to_next_level
+        self.exp_to_next_level += 50
+        self.hp += 15  # 레벨 업 시 체력 증가
+        self.physic_pow += 3  # 레벨 업 시 공격력 증가
+        self.magic_pow += 10
+        self.max_mp += 15  # 레벨 업 시 마나 증가
+        self.restored_mp += 5
+        self.mp = self.max_mp
+        print(f'\n축하합니다! {self.name} 레벨 업!')
+        print(f'현재 레벨: {self.level}, 체력: {self.hp}, 공격력: {self.physic_pow}, 마나: {self.mp}/{self.max_mp}')
+        self.choose_skill()
+
+
+    def restore_mp(self, amount):
+        self.mp = min(self.max_mp, self.mp + amount)
+        print(f'{self.name}의 마나가 {amount} 회복되었습니다. (현재 마나: {self.mp}/{self.max_mp})')
+    def choose_skill(self):
+        print("\n[스킬 선택] 새 스킬을 배울 수 있습니다!")
+        available_skills = ["힐", "파이어애로우", "파이어인첸트"]
+        for idx, skill in enumerate(available_skills, start=1):
+            print(f"{idx}. {skill}")
+        choice = int(input("배우고 싶은 스킬 번호를 입력하세요: ")) - 1
+        if 0 <= choice < len(available_skills):
+            new_skill = available_skills[choice]
+            self.skills.append(new_skill)
+            print(f"[{self.name}] 새로운 스킬 획득: {new_skill}")
+        else:
+            print("잘못된 선택입니다. 다시 시도해주세요.")
+            self.choose_skill()
+
+    def use_skill(self, skill_name, target):
+        skill_cost = {"파이어볼": 10 * self.level, "힐": 10 * self.level, "파이어애로우": 20 * self.level, "파이어인첸트": 35 * self.level}
+        if skill_name in self.skills:
+            if self.mp >= skill_cost[skill_name]:
+                self.mp -= skill_cost[skill_name]
+                print(f'{self.name}가 {skill_name} 스킬을 사용합니다! (마나: {self.mp}/{self.max_mp})')
+                if skill_name == "파이어볼":
+                    damage = self.magic_pow * 2
+                    target.hp -= damage
+                    print(f"[{target.name}] {damage}의 피해를 입었습니다!")
+                elif skill_name == "힐":
+                    self.hp += 15
+                    print(f"[{self.name}] 힐로 체력을 15 회복. 현재 체력: {self.hp}")
+                elif skill_name == "파이어애로우":
+                    damage = self.magic_pow * 3
+                    target.hp -= damage
+                    print(f"[{target.name}] {damage}의 피해!")
+                
+                elif skill_name == "파이어인첸트":
+                    turnA = 4
+                    turnB = turn
+                    while turnA > 0:
+                        turnC = turn - turnB
+                        if turnC < 4:
+                            turnA -=1
+                    if turnA > 0:
+                        self.physic_pow += self.magic_pow / 4
+                    print(f"[{target.name}] {damage}의 피해!")
+            else:
+                print(f"마나 부족! {skill_name} 스킬 사용 실패. (필요 마나: {skill_cost[skill_name]})")
+        else:
+            print(f"[{self.name}] 배우지 않은 스킬입니다: {skill_name}")
+    
+    def evade(self):
+        success = rd.random() < 0.5  # 50% 확률로 회피 성공
+        if success:
+            print(f"[{self.name}] 회피 성공! 이번 턴에 피해를 받지 않습니다.")
+        else:
+            print(f"[{self.name}] 회피 실패! 다음 턴에 대비하세요.")
+        return success
+
+    def status(self):
+        print(f"\n[플레이어 상태]")
+        print(f"이름: {self.name}")
+        print(f"레벨: {self.level}")
+        print(f"체력: {self.hp}")
+        print(f"마나: {self.mp}/{self.max_mp}")
+        print(f"경험치: {self.exp}/{self.exp_to_next_level}")
+        print(f"공격력: {self.physic_pow}")
+        print(f"스킬: {self.skills}")
+        print(f"====================")
+
+class Player3(Object):
+    def __init__(self, name, hp, physic_pow):
+        super().__init__(name, hp, physic_pow)
+        self.level = 1
+        self.exp = 0
+        self.exp_to_next_level = 50
+        self.max_hp = hp
+        self.skills = []  # 플레이어가 보유한 스킬 리스트
+        self.mp = 0  # 플레이어 초기 마나
+        self.max_mp = 0
+        self.restored_mp = 0
+
+    def gain_exp(self, amount):
+        self.exp += amount
+        print(f'[{self.name}] 경험치 {amount} 획득! (현재 경험치: {self.exp}/{self.exp_to_next_level})')
+        if self.exp >= self.exp_to_next_level:
+            self.level_up()
+
+    def level_up(self):
+        self.level += 1
+        self.exp -= self.exp_to_next_level
+        self.exp_to_next_level += 50
+        self.max_hp +=40  # 레벨 업 시 체력 증가
+        self.hp = self.max_hp  #레벨 업 시 체력 회복
+        self.physic_pow += 5  # 레벨 업 시 공격력 증가
+        print(f'\n축하합니다! {self.name} 레벨 업!')
+        print(f'현재 레벨: {self.level}, 체력: {self.hp}, 공격력: {self.physic_pow}, 마나: 0')
+        self.choose_skill()
+
+    def restore_mp(self, amount):
+        self.mp = min(self.max_mp, self.mp + amount)
+        print(f'{self.name}의 마나가 {amount} 회복되었습니다. (현재 마나: {self.mp}/{self.max_mp})')
+
+    def choose_skill(self):
+        print("\n[스킬 선택] 새 스킬을 배울 수 있습니다!")
+        available_skills = ["혈참", "광폭화", "회복"]
+        for idx, skill in enumerate(available_skills, start=1):
+            print(f"{idx}. {skill}")
+        choice = int(input("배우고 싶은 스킬 번호를 입력하세요: ")) - 1
+        if 0 <= choice < len(available_skills):
+            new_skill = available_skills[choice]
+            self.skills.append(new_skill)
+            print(f"[{self.name}] 새로운 스킬 획득: {new_skill}")
+        else:
+            print("잘못된 선택입니다. 다시 시도해주세요.")
+            self.choose_skill()
+
+    def use_skill(self, skill_name, target):
+        skill_cost = {"혈참": 10 * self.level, "광폭화": 10 * self.level, "회복": 0 * self.level}
+        if skill_name in self.skills:
+            if self.hp >= skill_cost[skill_name]:
+                self.hp -= skill_cost[skill_name]
+                print(f'{self.name}가 {skill_name} 스킬을 사용합니다! (체력: {self.hp}/{self.max_hp})')
+                if skill_name == "혈참":
+                    damage = self.hp // 5
+                    target.hp -= damage
+                    self.hp -= damage // 2
+                    print(f"[{target.name}] {damage}의 피해를 입었습니다!")
+                elif skill_name == "회복":
+                    self.hp += 10
+                    print(f"[{self.name}] 마음을 가라 앉히고 체력을 10 회복. 현재 체력: {self.hp}")
+                elif skill_name == "광폭화":
+                    damage = self.physic_pow * 2
+                    target.hp -= damage
+                    print(f"[{target.name}] {damage}의 피해! 추가 행동 가능!")
+            else:
+                print(f"체력 부족! {skill_name} 스킬 사용 실패. (필요 체력: {skill_cost[skill_name]})")
+        else:
+            print(f"[{self.name}] 배우지 않은 스킬입니다: {skill_name}")
+
+    def evade(self):
+        success = rd.random() < 0.5  # 50% 확률로 회피 성공
+        if success:
+            print(f"[{self.name}] 회피 성공! 이번 턴에 피해를 받지 않습니다.")
+        else:
+            print(f"[{self.name}] 회피 실패! 다음 턴에 대비하세요.")
+        return success
+
+    def status(self):
+        print(f"\n[플레이어 상태]")
+        print(f"이름: {self.name}")
+        print(f"레벨: {self.level}")
+        print(f"체력: {self.hp}")
+        print(f"마나: {self.mp}/{self.max_mp}")
+        print(f"경험치: {self.exp}/{self.exp_to_next_level}")
+        print(f"공격력: {self.physic_pow}")
+        print(f"스킬: {', '.join(self.skills) if self.skills else '없음'}")
+        print(f"====================")
+
+class Monster(Object):
+    def __init__(self, name, hp, physic_pow, exp_reward):
+        super().__init__(name, hp, physic_pow)
+        self.exp_reward = exp_reward
+
+    def cure(self):
+        self.hp += 5 + wave
+        print(f'{self.name} 체력 회복! 현재 체력: {self.hp}')
+        return self.hp
+
+    def wait(self):  
+        print(f'{self.name} 대기 중.')
+
+
+# 전투 로그 저장
+battle_log = []
+
+def log_action(action):
+    battle_log.append(action)
+    print(f"\n[전투 로그] {action}")
+    time.sleep(0.5)
+
+def player_action():
+    while True:
+        print('\n< 행동 선택 >')
+        print('1. 물리 공격')
+        print('2. 스킬 사용')
+        print('3. 회피 시도')
+        action = int(input('수행할 행동 번호를 입력하세요: '))
+
+        mon = monsterList()
+
+        if action == 1:
+            print('\n< 대상 선택 >')
+            for idx, monster in enumerate(mon, start=1):
+                print(f'{idx}. {monster.name} (HP: {monster.hp})')
+            target_idx = int(input('공격할 대상 번호를 입력하세요: ')) - 1
+            while True:
+                if target_idx + 1 > len(mon):
+                    print("잘못된 대상. 다시 시도해주세요.")
+                    target_idx = int(input('공격할 대상 번호를 입력하세요: ')) - 1
+                else:
+                    break
+
+            target = mon[target_idx]
+            target.hp = p1.attack(target)
+            log_action(f"{p1.name}가 {target.name}을 공격하여 {p1.physic_pow} 피해를 입혔습니다!")
+            break
+
+        elif action == 2:
+            if not p1.skills:
+                print("사용 가능한 스킬이 없습니다. 기본 공격 진행.")
+                continue
+
+            print("\n< 사용 가능한 스킬 >")
+            for idx, skill in enumerate(p1.skills, start=1):
+                print(f"{idx}. {skill}")
+            skill_choice = int(input("사용할 스킬 번호를 입력하세요: ")) - 1
+
+            if 0 <= skill_choice < len(p1.skills):
+                skill_name = p1.skills[skill_choice]
+                print('\n< 대상 선택 >')
+                for idx, monster in enumerate(mon, start=1):
+                    print(f'{idx}. {monster.name} (HP: {monster.hp})')
+                target_idx = int(input('공격할 대상 번호를 입력하세요: ')) - 1
+
+                target = mon[target_idx]
+                p1.use_skill(skill_name, target)
+                log_action(f"{p1.name}가 {skill_name} 스킬을 사용하여 {target.name}에게 피해를 입혔습니다!")
+                break
+            else:
+                print("잘못된 선택. 다시 시도해주세요.")
+                continue
+
+        elif action == 3:
+            if p1.evade():
+                log_action(f"{p1.name} 회피 성공! 피해를 무효화합니다.")
+            else:
+                log_action(f"{p1.name} 회피 실패! 피해를 받을 수 있습니다.")
+            break
+
+        else:
+            print("잘못된 입력. 다시 시도해주세요.")
+            continue
+
+    monster_death()
+
+
+
+def monster_action():
+    mon = monsterList()
+    for monster in mon:
+        action_num = rd.randrange(1, 300) % 3
+        if action_num == 0:
+            monster.cure()
+            log_action(f"{monster.name} 체력을 10 회복했습니다.")
+        elif action_num == 1:
+            monster.wait()
+            log_action(f"{monster.name} 대기 중.")
+        elif action_num == 2:
+            monster.attack(p1)
+            log_action(f"{monster.name}이(가) {p1.name}을 공격하여 {monster.physic_pow} 피해를 입혔습니다!")
+
+def monster_death():
+    mon = monsterList()
+    global wave
+    for monster in mon[:]:
+        if monster.hp <= 0:
+            print(f'\n{monster.name} 쓰러짐!')
+            mon.remove(monster)
+            p1.gain_exp(monster.exp_reward)  # 몬스터 처치 시 경험치 부여
+
+def end_turn():
+    print('\n===== 턴 요약 =====')
+    for entry in battle_log:
+        print(entry)
+    print('===================')
+    battle_log.clear()
+    time.sleep(1)
+
+def next_wave():
+    global current_boss  
+    global wave  
+    choice = input("다음 웨이브로 진행하시겠습니까? (y/n): ").lower()
+    if choice == 'y':
+        current_boss = None  # 보스 초기화
+        wave += 1  
+        return True
+    elif choice == 'n':
+        print("게임 종료. 수고하셨습니다!")
+        return False
+    else:
+        print("잘못된 입력. 다시 시도해주세요.")
+        return next_wave()
+    
+def victory():
+        print('===== 승리 =====')
+        print('웨이브 진도 : ' , wave)
+        p1.status()
+        print('===================')
+        print("게임 종료. 수고하셨습니다!")
+
+def defeat():
+        print('===== 패배 =====')
+        print('웨이브 진도 : ' , wave)
+        p1.status()
+        print('===================')
+        print("게임 종료. 수고하셨습니다!")
+
+import random  # random.choice 사용
+
+# 전역 변수 선언
+current_boss = None  # 현재 보스를 저장
+wave = 1 
+
+def monsterList():
+    global current_boss  
+    if wave % 5 != 0:
+        return mon_list  
+    else:
+        if current_boss is None:  # 처음 호출될 때만 보스를 선택
+            current_boss = random.choice(Boss_list)
+        return [current_boss]
+    
+# 게임 실행
+
+import random as rd
+
+print('직업을 선택하세요 1.워리어  2.마법사  3.광전사')   
+p1 = int(input('원하는 직업의 번호를 입력해 주세요 : '))
+if p1 == 1:
+    p1 = Player('워리어', 120, 15)
+elif p1 == 2:
+    p1 = Player2('마법사', 90, 6)
+elif p1 == 3:
+    p1 = Player3('광전사', 150, 10)
+
+
+
+# 초기 상태 표시
+print('\n===== 초기 플레이어 상태 =====')
+p1.status()
+time.sleep(1)
+
+
+
+while True:
+    print(f'\n===== 웨이브 {wave} 시작 =====')
+
+    m1 = Monster('고블린', 5 * wave, 10 * wave, exp_reward=10 * wave)
+    m2 = Monster('오크', 10 * wave, 15 * wave, exp_reward=15 * wave)
+    m3 = Monster('오거', 20 * wave, 25 * wave, exp_reward=20 * wave)
+    mon_list = [m1, m2, m3]
+
+    M1 = Monster('고블린 킹', 30 * wave, 50 * wave, exp_reward=40 * wave)
+    M2 = Monster('오크 킹', 60 * wave, 40 * wave, exp_reward=50 * wave)
+    M3 = Monster('Professor', 6666, 666, exp_reward=50 * wave)
+    Boss_list = [M1, M2, M3]
+    
+
+    turn = 0
+
+    while True:
+
+        mon = monsterList()
+        
+        print('\n===== 턴 상태 =====')
+        p1.status()
+        for m in mon:
+            m.status()
+        time.sleep(1)
+
+        
+
+        if turn % 2 == 0:
+            print('\n===== 플레이어 턴 =====')
+            
+            player_action()
+
+            if len(mon) <= 0:
+                print(f'\n모든 몬스터를 물리쳤습니다! 웨이브 {wave} 클리어!')
+                break
+
+        else:
+            print('\n===== 몬스터 턴 =====')
+            
+            monster_action()
+
+            if p1.hp <= 0:
+                print('\n플레이어 사망!')
+                print('== Game Over ==')
+                exit()
+
+        # 턴 종료 후 마나 회복
+        p1.restore_mp(p1.restored_mp)
+
+        turn += 1
+        print('\n-------------------')
+        print('----- 턴 종료 -----')
+        print('-------------------')
+
+        end_turn()
+
+    if not next_wave():
+        break
+
